@@ -1,0 +1,11 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and update with your values
+# Do NOT commit terraform.tfvars to Git - it may contain sensitive information
+
+aws_region         = "us-east-1"
+vpc_cidr            = "10.0.0.0/16"
+public_subnet_cidr  = "10.0.1.0/24"
+instance_type       = "t2.micro"
+ecr_repo_name       = "nextjs-app-repo"
+ssh_key_name        = "my-ssh-key"  # Leave empty if you don't want SSH access
+image_tag           = "latest"

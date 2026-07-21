@@ -1,0 +1,69 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+
+# AWS & Credentials
+*.pem
+*.key
+*.pub
+.aws/
+aws-credentials
+
+# Terraform
+terraform.tfvars
+terraform.tfvars.json
+terraform.tfstate
+terraform.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+pnpm-lock.yaml
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Logs
+*.log
+*.logs
+.pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.cache/
+.gitkeep
+*.tmp
+
+# Docker
+.dockerignore
+
+# CI/CD
+.github/workflows/*.log

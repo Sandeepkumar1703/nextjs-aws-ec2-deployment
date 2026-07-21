@@ -1,0 +1,25 @@
+{
+  "name": "nextjs-aws-ec2-deployment",
+  "version": "1.0.0",
+  "description": "Production-ready Next.js deployment to AWS EC2 using Docker and Terraform",
+  "private": true,
+  "scripts": {
+    "dev": "cd app && npm run dev",
+    "build": "cd app && npm run build",
+    "start": "cd app && npm run start",
+    "lint": "cd app && npm run lint || true"
+  },
+  "keywords": [
+    "next.js",
+    "aws",
+    "ec2",
+    "terraform",
+    "docker",
+    "ci-cd"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
