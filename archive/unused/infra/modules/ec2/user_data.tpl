@@ -60,4 +60,3 @@ docker run -d \
   $${IMAGE}
 
 echo "Docker image deployed successfully at $(date)"
-

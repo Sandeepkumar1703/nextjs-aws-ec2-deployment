@@ -1,516 +1,593 @@
-# nextjs-aws-ec2-deployment
+# Next.js AWS EC2 Deployment using Docker & Amazon ECR
 
-[![GitHub](https://img.shields.io/badge/GitHub-nextjs--aws--ec2--deployment-blue?logo=github)](https://github.com/yourusername/nextjs-aws-ec2-deployment)
-[![Terraform](https://img.shields.io/badge/Terraform-v1.0+-blue?logo=terraform)](https://www.terraform.io/)
-[![Docker](https://img.shields.io/badge/Docker-Multi--stage-blue?logo=docker)](https://www.docker.com/)
-[![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20ECR%20%7C%20VPC-orange?logo=amazon-aws)](https://aws.amazon.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-Latest-black?logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue?logo=github-actions)](https://github.com/features/actions)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+## Project Overview
 
-Production-ready DevOps project demonstrating how to deploy a Next.js application to AWS using only Free Tier eligible services. This project showcases modern DevOps practices including Infrastructure as Code (Terraform), containerization (Docker), and automated CI/CD (GitHub Actions).
+This project demonstrates the deployment of a **Next.js TypeScript web application** on AWS using modern DevOps practices.
 
-**Perfect for portfolios, learning, and small production deployments!**
+The application is containerized using **Docker**, stored in **Amazon Elastic Container Registry (ECR)**, and deployed on an **Amazon EC2 instance**.
+
+The objective of this project was to understand and implement a real-world cloud deployment workflow:
+
+
+Developer Laptop
+|
+|
+Docker Build
+|
+|
+▼
+Docker Image
+|
+|
+Docker Push
+|
+|
+▼
+Amazon ECR
+Private Registry
+|
+|
+Docker Pull
+|
+|
+▼
+Amazon EC2
+|
+|
+Docker Run
+|
+|
+▼
+Next.js Application
+
 
 ---
 
-## Key Features
+# Architecture
 
-- **Next.js + TypeScript**: Modern React framework with type safety
-- **Multi-stage Docker build**: Optimized container images (~150MB)
-- **Non-root container**: Runs as unprivileged user for enhanced security
-- **Terraform (Modular)**: Infrastructure as Code with reusable modules
-- **Amazon ECR**: Private Docker registry for container images
-- **GitHub Actions**: Automated CI/CD pipeline
-- **Free Tier Eligible**: Uses only AWS free tier services (where possible)
-- **No EKS/Kubernetes**: Simplified deployment using EC2
-
-## Quick Links
-
-📚 **Documentation**
-- [Architecture Overview](./docs/architecture.md) - System design, data flow, security architecture
-- [Deployment Guide](./docs/deployment.md) - Step-by-step setup instructions
-- [Troubleshooting Guide](./docs/troubleshooting.md) - Common issues and solutions
-- [Security Guide](./docs/security.md) - Best practices and security recommendations
+                     GitHub Repository
+                            |
+                            |
+                     Source Code
+                            |
+                            |
+                     Developer Laptop
+                            |
+                            |
+                     docker build
+                            |
+                            |
+                     Docker Image
+                            |
+                            |
+                     docker push
+                            |
+                            |
+                     Amazon ECR
+                     Private Registry
+                            |
+                            |
+                     docker pull
+                            |
+                            |
+                     Amazon EC2
+                Amazon Linux 2023
+                            |
+                            |
+                     docker run
+                            |
+                            |
+                 Next.js Container
+                            |
+                            |
+                   Port 3000
+                            |
+                            |
+                     Web Browser
 
 ---
 
-## Architecture
+# Technologies Used
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     GitHub Repository                        │
-│  (Next.js App + Terraform + GitHub Actions Workflow)        │
-└────────┬────────────────────────────────────────────────────┘
-         │ Push to main
-         ↓
-┌─────────────────────────────────────────────────────────────┐
-│              GitHub Actions CI/CD Pipeline                   │
-│  ┌─────────────────────────────────────────────────────────┐ │
-│  │ 1. Checkout code                                        │ │
-│  │ 2. Configure AWS credentials                           │ │
-│  │ 3. Build Docker image                                  │ │
-│  │ 4. Push to Amazon ECR                                  │ │
-│  │ 5. Connect to EC2 via SSH                             │ │
-│  │ 6. Pull latest image & restart container              │ │
-│  └─────────────────────────────────────────────────────────┘ │
-└────────┬──────────────────────────────────────┬──────────────┘
-         │                                      │
-         ↓                                      ↓
-   ┌──────────────┐                    ┌──────────────┐
-   │ Amazon ECR   │                    │ AWS EC2      │
-   │ Repository   │                    │ Instance     │
-   │              │                    │              │
-   │ Docker       │────Pull Image──→   │ Docker       │
-   │ Images       │                    │ Container    │
-   └──────────────┘                    └──────┬───────┘
-                                              │
-                                              ↓
-                                        ┌──────────────┐
-                                        │ Port 80      │
-                                        │ Next.js App  │
-                                        │ (Port 3000)  │
-                                        └──────────────┘
-```
+## Next.js
 
-## Prerequisites
+### Why Next.js?
 
-- **AWS Account**: Free Tier eligible (t2.micro instance, ECR)
-- **Terraform**: v1.0 or higher
-- **AWS CLI**: v2 (optional, for manual deployments)
-- **Docker**: For local development and building images
-- **Git**: For repository management
-- **SSH Key Pair**: Optional but recommended for EC2 access
+Next.js was used as the frontend framework because it provides:
 
-## Project Structure
+- React-based development
+- Server-side rendering support
+- Optimized production builds
+- Better performance
+- TypeScript support
 
-```
-nextjs-aws-ec2-deployment/
-├── app/                              # Next.js application
-│   ├── package.json                 # Node dependencies
-│   ├── tsconfig.json                # TypeScript configuration
-│   └── pages/
-│       └── index.tsx                # Next.js home page
-├── infra/                            # Terraform infrastructure
-│   ├── provider.tf                  # AWS provider configuration
-│   ├── variables.tf                 # Input variables
-│   ├── terraform.tfvars.example     # Example variables (copy to terraform.tfvars)
-│   ├── outputs.tf                   # Output values
-│   ├── security.tf                  # Security configurations
-│   ├── main.tf                      # Root module
-│   └── modules/
-│       ├── ec2/                     # EC2 instance module
-│       │   ├── main.tf
-│       │   ├── variables.tf
-│       │   ├── outputs.tf
-│       │   └── user_data.tpl        # EC2 startup script
-│       └── network/                 # VPC & networking module
-│           ├── main.tf
-│           ├── variables.tf
-│           └── outputs.tf
-├── scripts/
-│   └── install_docker.sh            # Docker installation script
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yml                # GitHub Actions CI/CD pipeline
-├── Dockerfile                        # Multi-stage Docker build
-├── docker-compose.yml               # Local development setup
-├── .dockerignore                    # Files excluded from Docker build
-├── .gitignore                       # Files excluded from Git
-├── .env.example                     # Environment variables template
-├── package.json                     # Root package.json (scripts)
-└── README.md                        # This file
-```
 
-## Quick Start (Local Development)
+---
 
-### 1. Clone the repository
+## TypeScript
+
+### Why TypeScript?
+
+TypeScript improves:
+
+- Code quality
+- Maintainability
+- Developer productivity
+- Error detection during development
+
+
+---
+
+## Docker
+
+### Why Docker?
+
+Docker was used to package the application with all required dependencies.
+
+Benefits:
+
+- Consistent runtime environment
+- Application portability
+- Easy deployment
+- Environment isolation
+
+
+Docker workflow:
+
+
+Application Code
+|
+|
+Dockerfile
+|
+|
+Docker Image
+|
+|
+Docker Container
+
+
+---
+
+## Amazon ECR
+
+### Why Amazon ECR?
+
+Amazon Elastic Container Registry was used as a private Docker image repository.
+
+Benefits:
+
+- Secure Docker image storage
+- AWS IAM integration
+- Private container registry
+- Easy integration with AWS services
+
+
+---
+
+## Amazon EC2
+
+### Why EC2?
+
+EC2 was selected to host the Docker container.
+
+Benefits:
+
+- Full server control
+- Flexible configuration
+- Suitable for learning production deployment
+- Supports Docker workloads
+
+
+EC2 Configuration:
+
+
+Instance Type:
+t2.micro
+
+Operating System:
+Amazon Linux 2023
+
+Application Port:
+3000
+
+
+---
+
+## AWS IAM
+
+IAM was used to securely authenticate AWS CLI and access AWS services.
+
+Created IAM user:
+
+
+devops-group
+
+
+Attached permissions:
+
+
+AmazonEC2FullAccess
+
+AmazonEC2ContainerRegistryFullAccess
+
+
+---
+
+# Deployment Workflow
+
+## Step 1: Develop Application Locally
+
+The Next.js application was developed and tested locally.
+
+Install dependencies:
 
 ```bash
-git clone https://github.com/yourusername/nextjs-aws-ec2-deployment.git
-cd nextjs-aws-ec2-deployment
-```
-
-### 2. Install Next.js dependencies
-
-```bash
-cd app
 npm install
-```
 
-### 3. Build and run locally with Docker Compose
+Run locally:
 
-```bash
-# From the project root
-docker-compose up --build
-# Visit http://localhost:3000
-```
-
-### 4. Or develop without Docker
-
-```bash
-cd app
 npm run dev
-# Visit http://localhost:3000
-```
 
-## AWS Deployment with Terraform
+Application:
 
-### 1. Prerequisites for Terraform
+http://localhost:3000
+Step 2: Create Docker Image
 
-- AWS credentials configured locally:
-  ```bash
-  aws configure
-  # or set environment variables:
-  export AWS_ACCESS_KEY_ID=your-key
-  export AWS_SECRET_ACCESS_KEY=your-secret
-  export AWS_REGION=us-east-1
-  ```
+Build Docker image:
 
-- Create an SSH key pair in AWS (optional, for SSH access):
-  ```bash
-  aws ec2 create-key-pair --key-name my-ssh-key --region us-east-1 --query 'KeyMaterial' --output text > my-ssh-key.pem
-  chmod 400 my-ssh-key.pem
-  ```
+docker build -t nextjs-aws-app .
 
-### 2. Initialize Terraform
+Verify image:
 
-```bash
-cd infra
-terraform init
-```
+docker images
 
-### 3. Create terraform.tfvars
+Example:
 
-```bash
-# Copy the example file
-cp terraform.tfvars.example terraform.tfvars
+nextjs-aws-app:latest
+Step 3: Configure AWS CLI
 
-# Edit with your values
-nano terraform.tfvars
-```
+Install AWS CLI and configure credentials:
 
-Example `terraform.tfvars`:
-```hcl
-aws_region         = "us-east-1"
-vpc_cidr            = "10.0.0.0/16"
-public_subnet_cidr  = "10.0.1.0/24"
-instance_type       = "t2.micro"
-ecr_repo_name       = "nextjs-app-repo"
-ssh_key_name        = "my-ssh-key"  # Leave empty if not using SSH
-image_tag           = "latest"
-```
+aws configure
 
-### 4. Plan and review infrastructure
+Enter:
 
-```bash
-terraform plan -out plan.tfplan
-```
+AWS Access Key ID
 
-### 5. Apply infrastructure
+AWS Secret Access Key
 
-```bash
-terraform apply plan.tfplan
-```
+Default region:
+ap-south-1
 
-After completion, note the outputs:
-- `ecr_repository_url`: Your ECR repository URL
-- `ec2_public_ip`: Public IP of your EC2 instance
+Output:
+json
 
-### 6. Verify EC2 instance is running
+Verify:
 
-```bash
-# SSH into your instance (if you provided ssh_key_name)
-ssh -i my-ssh-key.pem ec2-user@<EC2_PUBLIC_IP>
-
-# Check Docker is running
-docker ps
-
-# Monitor the application
-docker logs -f nextjs-app
-```
-
-## CI/CD with GitHub Actions
-
-### 1. Set GitHub Repository Secrets
-
-Go to your GitHub repository → Settings → Secrets and variables → Actions → New repository secret
-
-Add the following secrets:
-
-```
-AWS_ACCESS_KEY_ID          → Your AWS access key
-AWS_SECRET_ACCESS_KEY      → Your AWS secret key
-AWS_ACCOUNT_ID             → Your AWS account ID (e.g., 123456789012)
-AWS_REGION                 → AWS region (e.g., us-east-1)
-ECR_REPOSITORY             → ECR repo name (e.g., nextjs-app-repo)
-EC2_HOST                   → Public IP or DNS of EC2 instance
-EC2_USER                   → EC2 user (e.g., ec2-user for Amazon Linux 2)
-EC2_SSH_KEY                → Private SSH key content (cat my-ssh-key.pem)
-```
-
-### 2. Push to main branch
-
-```bash
-git push origin main
-```
-
-### 3. Monitor workflow
-
-- Go to Actions tab in GitHub
-- Watch the workflow execute
-- Check EC2 instance for running container: `docker logs -f nextjs-app`
-
-## Environment Variables
-
-### Application Environment Variables
-
-Create `.env.local` in the `app/` directory (or root `.env` for Next.js):
-
-```bash
-# Copy from .env.example
-cp .env.example .env.local
-```
-
-### Terraform Variables
-
-Copy from `terraform.tfvars.example`:
-```bash
-cd infra
-cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars with your specific values
-```
-
-**Important**: `.env`, `terraform.tfvars`, and `.pem` files are in `.gitignore` and should never be committed.
-
-## Security Best Practices
-
-### 1. Container Security
-
-- ✅ **Non-root user**: Container runs as `nextjs:nodejs` (UID 1001) instead of root
-- ✅ **Multi-stage build**: Reduces final image size and excludes build dependencies
-- ✅ **ECR image scanning**: Enabled to detect vulnerabilities
-
-### 2. Infrastructure Security
-
-- ✅ **IAM roles**: EC2 instance uses IAM role with ECR read-only access
-- ✅ **Security groups**: Restrict SSH access (configure CIDR blocks, not 0.0.0.0/0 for production)
-- ✅ **No hardcoded credentials**: Uses AWS IAM roles and GitHub Secrets
-- ✅ **Private ECR repository**: Docker images stored in private ECR
-
-### 3. CI/CD Security
-
-- ✅ **GitHub Secrets**: All credentials stored as encrypted secrets
-- ✅ **SSH key-based deployment**: Container deployment via SSH, not HTTP
-- ✅ **Read-only IAM permissions**: ECR access limited to pull operations
-
-### 4. Production Recommendations
-
-For production deployments, consider:
-
-**Security Group:**
-```hcl
-# Instead of allowing SSH from anywhere:
-# cidr_blocks = ["0.0.0.0/0"]
-
-# Use a specific IP range or Bastion host:
-# cidr_blocks = ["YOUR_OFFICE_IP/32"]
-# or use AWS Systems Manager Session Manager instead of SSH
-```
-
-**GitHub Actions:**
-- Use AWS OIDC for temporary credentials instead of long-lived keys
-- Rotate SSH keys regularly
-- Monitor CloudTrail for deployment activities
-
-**EC2:**
-- Enable CloudWatch monitoring and alarms
-- Use AWS Systems Manager Session Manager instead of SSH
-- Apply OS security patches regularly
-
-**Container Registry:**
-- Enable ECR image scanning
-- Implement image signing with Docker Content Trust
-- Set lifecycle policies to clean old images
-
-## Cost Optimization Notes
-
-### Free Tier Eligible (as of 2024)
-
-- **EC2**: t2.micro (750 hours/month for 12 months)
-- **ECR**: 0.50 USD per GB-month (first 500 GB/month free tier varies)
-- **Data Transfer**: Free ingress, 1GB/month free egress
-- **CloudWatch**: Limited free logs
-
-### Estimated Monthly Cost (after free tier)
-
-```
-Scenario: t2.micro EC2 + ECR (10GB storage) + Data transfer (5GB/month)
-
-t2.micro (beyond free tier):    $0.00-10.00 USD
-ECR storage (10GB):             $5.00 USD
-ECR API calls:                  $0.50 USD
-Data transfer (outbound 5GB):   $1.00 USD
-────────────────────────────────────────────
-Total (approximate):            $6.50-16.50 USD/month
-```
-
-### Cost Reduction Strategies
-
-1. **Use Auto Shutdown**: Stop EC2 when not needed
-2. **Monitor with AWS Budgets**: Set alerts for cost anomalies
-3. **Cleanup unused resources**: Run `terraform destroy` when not using
-4. **Optimize ECR**: Delete old images, use lifecycle policies
-5. **Direct Connect alternatives**: Use VPC endpoints instead of NAT
-
-## Terraform Commands Reference
-
-```bash
-# Initialize Terraform
-terraform init
-
-# Validate configuration
-terraform validate
-
-# Format code
-terraform fmt -recursive
-
-# Plan deployment
-terraform plan -out plan.tfplan
-
-# Apply deployment
-terraform apply plan.tfplan
-
-# Destroy infrastructure (clean up)
-terraform destroy
-
-# View outputs
-terraform output
-
-# View Terraform state (read-only)
-terraform state list
-terraform state show aws_instance.app
-```
-
-## Docker Commands Reference
-
-```bash
-# Build local image
-docker build -t local-nextjs .
-
-# Run locally
-docker run -p 3000:3000 local-nextjs
-
-# Build with Docker Compose
-docker-compose up --build
-
-# View running containers
-docker ps
-
-# View logs
-docker logs -f nextjs-app
-
-# SSH into running container
-docker exec -it nextjs-app sh
-```
-
-## Troubleshooting
-
-### Terraform Issues
-
-**Error: "Error putting S3 Backend Bucket versioning"**
-```bash
-# Solution: Ensure AWS credentials are valid
 aws sts get-caller-identity
-```
 
-**Error: "Error: No EC2 images found with matching name"**
-```bash
-# Solution: Verify region supports Amazon Linux 2 AMI
-terraform plan -var="aws_region=us-east-1"
-```
+Expected output:
 
-### GitHub Actions CI/CD Issues
+{
+    "UserId": "xxxx",
+    "Account": "xxxx",
+    "Arn": "arn:aws:iam::xxxx:user/devops-group"
+}
+Step 4: Login to Amazon ECR
 
-**Error: "SSH connection timed out"**
-- Verify EC2 instance has elastic IP or public IP
-- Check security group allows SSH (port 22)
-- Verify EC2_USER is correct (ec2-user for Amazon Linux 2)
+Authenticate Docker with AWS ECR:
 
-**Error: "Docker image not found in ECR"**
-- Verify IMAGE_URI in workflow output
-- Check ECR repository name matches ECR_REPOSITORY secret
-- Ensure AWS credentials have ECR access
+aws ecr get-login-password \
+--region ap-south-1 |
+docker login \
+--username AWS \
+--password-stdin \
+ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com
 
-### EC2 Container Issues
+Successful output:
 
-**Check container logs:**
-```bash
-ssh -i my-ssh-key.pem ec2-user@<IP>
+Login Succeeded
+Step 5: Tag Docker Image
+
+Tag local image with ECR repository URL:
+
+docker tag \
+nextjs-aws-app:latest \
+ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/nextjs-aws-app:latest
+Step 6: Push Docker Image to ECR
+
+Upload image:
+
+docker push \
+ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/nextjs-aws-app:latest
+
+Example output:
+
+latest: digest:
+sha256:xxxx
+
+Docker image is now available in ECR.
+
+Step 7: Deploy Application on EC2
+
+Connect to EC2:
+
+ssh -i key.pem ec2-user@EC2_PUBLIC_IP
+
+Install Docker:
+
+sudo yum install docker -y
+
+sudo systemctl start docker
+
+sudo systemctl enable docker
+Step 8: Authenticate EC2 with ECR
+
+On EC2:
+
+aws ecr get-login-password \
+--region ap-south-1 |
+docker login \
+--username AWS \
+--password-stdin \
+ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com
+Step 9: Pull Docker Image
+
+Download image:
+
+docker pull \
+ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/nextjs-aws-app:latest
+Step 10: Run Container
+
+Start application:
+
+docker run -d \
+--name nextjs-app \
+-p 3000:3000 \
+ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/nextjs-aws-app:latest
+
+Verify:
+
+docker ps
+
+Expected:
+
+CONTAINER ID
+
+IMAGE
+
+PORTS
+
+STATUS
+Application Access
+
+Application runs on:
+
+http://EC2_PUBLIC_IP:3000
+
+Example:
+
+http://13.xxx.xxx.xxx:3000
+Docker Commands Used
+
+Build image:
+
+docker build -t nextjs-aws-app .
+
+View images:
+
+docker images
+
+Run container:
+
+docker run -d -p 3000:3000 image-name
+
+Check containers:
+
+docker ps
+
+View logs:
+
 docker logs nextjs-app
-docker logs -f --tail 50 nextjs-app
-```
 
-**Restart container:**
-```bash
-docker restart nextjs-app
-```
+Stop container:
 
-**View running processes:**
-```bash
-docker ps -a
-docker inspect nextjs-app
-```
+docker stop nextjs-app
 
-## Cleanup
+Remove container:
 
-### Remove all AWS infrastructure
+docker rm nextjs-app
+Security Considerations
+IAM Security
 
-```bash
-cd infra
-terraform destroy
-```
+Implemented:
 
-When prompted, type `yes` to confirm deletion of all resources.
+AWS IAM authentication
+Permission-based access
+No AWS credentials stored in code
+Docker Security
 
-### Clean local Docker
+Implemented:
 
-```bash
-docker-compose down
-docker image remove local-nextjs
-docker system prune -a  # Remove all unused images and containers
-```
+Containerized application
+Isolated runtime environment
+Production build process
+EC2 Security Group
 
-## Notes
+Required inbound ports:
 
-- **No AWS account hardcoding**: Uses `data.aws_caller_identity` to dynamically fetch account ID
-- **Modular Terraform**: Separate network and EC2 modules for reusability
-- **Production-ready workflow**: Multi-stage Docker build, non-root user, security best practices
-- **Free Tier optimization**: Uses t2.micro and other free tier services where applicable
+SSH
+22
 
-## Security Review Checklist
+Application
+3000
 
-Before pushing to GitHub, verify:
+Production recommendation:
 
-- ✅ No `.env` files committed (only `.env.example`)
-- ✅ No `terraform.tfvars` committed (only `terraform.tfvars.example`)
-- ✅ No `.pem` or `.key` files committed
-- ✅ No AWS credentials in code or workflow definitions
-- ✅ `.gitignore` includes all sensitive files
-- ✅ GitHub Secrets configured for all credentials
-- ✅ README includes security best practices
-- ✅ Terraform uses IAM data source (no account ID hardcoding)
+Instead of:
 
-## License
+0.0.0.0/0
 
-MIT
+Use:
 
-## Contributing
+Your IP/32
 
-Contributions are welcome! Please follow these guidelines:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+for SSH access.
+
+Cost Optimization
+
+This project uses AWS Free Tier eligible resources where possible.
+
+Resources:
+
+EC2 t2.micro
+
+IAM
+
+AWS CLI
+
+Small ECR repository
+
+To avoid unnecessary charges:
+
+Stop EC2 when not required:
+
+AWS Console:
+
+EC2
+ |
+Instances
+ |
+Stop Instance
+
+Remove unused ECR images:
+
+aws ecr delete-repository \
+--repository-name nextjs-aws-app \
+--force
+Troubleshooting
+SSH Connection Timeout
+
+Problem:
+
+ssh: connect to host port 22 timeout
+
+Possible reasons:
+
+EC2 instance stopped
+Security group missing port 22
+Public IP changed
+
+Solution:
+
+Start EC2 and verify:
+
+Inbound Rule
+
+TCP 22
+
+Your IP
+Docker Image Not Found
+
+Problem:
+
+No such image
+
+Solution:
+
+Check local images:
+
+docker images
+
+Pull from ECR:
+
+docker pull IMAGE_URI
+Application Not Accessible
+
+Check container:
+
+docker ps
+
+Check logs:
+
+docker logs nextjs-app
+
+Check port:
+
+sudo ss -tulpn | grep 3000
+Future Improvements
+
+Planned improvements:
+
+CI/CD Automation
+
+Implement:
+
+GitHub Push
+
+      |
+
+GitHub Actions
+
+      |
+
+Docker Build
+
+      |
+
+ECR Push
+
+      |
+
+EC2 Deployment
+Infrastructure as Code
+
+Automate AWS resources using:
+
+Terraform
+AWS CloudFormation
+Production Enhancements
+
+Add:
+
+Application Load Balancer
+HTTPS using AWS Certificate Manager
+Custom Domain
+CloudWatch Monitoring
+Auto Scaling
+ECS/EKS deployment
+Project Status
+
+Current implementation:
+
+✅ Next.js application
+✅ TypeScript
+✅ Docker containerization
+✅ Amazon ECR repository
+✅ EC2 deployment
+✅ AWS IAM authentication
+✅ Manual deployment workflow
+
+Future:
+
+⬜ GitHub Actions CI/CD
+⬜ Terraform automation
+⬜ HTTPS deployment
+⬜ Monitoring and alerting
+
+Author
+
+Sandeep Kumar Prasad
+
+DevOps / Cloud Engineering Project
+
+
+This README matches what you **actually performed**:
+- Laptop → Docker build ✅
+- Docker push → ECR ✅
+- EC2 → Docker pull ✅
+- EC2 → Docker run ✅
+- Next.js running on port 3000 ✅
+
+It avoids claiming things you haven't completed yet (full CI/CD, Terraform automation, ALB, HTTPS). This is safer for interviews and GitHub portfolio.
